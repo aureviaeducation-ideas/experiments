@@ -1,10 +1,32 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full bg-slate-50">
-<head>
+ <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aurus - Entrance Exam Tracker</title>
-    
+    <!-- PWA Theme Color & App Meta -->
+<meta name="theme-color" content="#0f172a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Aurus">
+
+<!-- Inline Embedded PWA Manifest -->
+<link rel="manifest" href='data:application/manifest+json,{"name":"Aurus — Entrance Exam Tracker","short_name":"Aurus","start_url":"./","display":"standalone","background_color":"#0f172a","theme_color":"#0f172a","orientation":"portrait","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/3135/3135715.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}'>
+
+<!-- Inline Auto-Service Worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      const swCode = `
+        self.addEventListener('install', (e) => self.skipWaiting());
+        self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
+        self.addEventListener('fetch', (e) => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+      `;
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+    });
+  }
+</script>
+
     <!-- PWA Web App Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
