@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aurus - Entrance Exam Tracker</title>
+    
+    <!-- PWA Web App Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Aurus">
+    <meta name="application-name" content="Aurus">
+    <meta name="theme-color" content="#0f172a">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            header, footer, .no-print, #exam-modal, #manual-modal {
+                display: none !important;
+            }
+            .print-header {
+                display: block !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-full flex flex-col bg-slate-50 text-slate-800 font-sans antialiased">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900 text-white shadow-xl border-b border-slate-800 no-print sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                
+                <!-- Brand Title with Modern Minimalist Aurus Icon -->
+                <div class="flex items-center gap-3.5">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/20 shrink-0 border border-white/10">
+                        <i class="fa-solid fa-compass text-2xl"></i>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-2xl font-extrabold tracking-tight text-white">Aurus</h1>
+                            <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] px-2 py-0.5 rounded-full font-semibold"><i class="fa-solid fa-rotate-2 text-[9px] mr-1"></i> Auto-Saved</span>
+                        </div>
+                        <p class="text-slate-400 text-xs font-medium">National & State Entrance Exam Tracker</p>
+                    </div>
+                </div>
+                
+                <!-- Quick Controls -->
+                <div class="flex flex-wrap items-center gap-2 no-print">
+                    <button id="open-manual-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold transition shadow flex items-center gap-1.5">
+                        <i class="fa-solid fa-book-open"></i> Manual
+                    </button>
+                    <button id="open-add-modal-btn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold transition shadow-md flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus text-sm"></i> Add Exam
+                    </button>
+                    <button id="export-pdf-btn" class="bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold transition shadow flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-pdf"></i> Save PDF / Print
+                    </button>
+                    <div class="flex items-center gap-1">
+                        <button id="export-json-btn" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-3 py-2.5 rounded-xl text-xs font-semibold transition flex items-center gap-1">
+                            <i class="fa-solid fa-download"></i> JSON
+                        </button>
+                        <label id="import-json-label" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-3 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1">
+                            <i class="fa-solid fa-upload"></i> Import
+                            <input type="file" id="import-json-input" accept=".json" class="hidden">
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Indicator Bar -->
+            <div class="mt-4 pt-3 border-t border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div class="flex items-center gap-3">
+                    <span class="text-slate-300 font-semibold">Tracked Progress:</span>
+                    <div class="flex-1 bg-slate-700/60 rounded-full h-2.5 overflow-hidden">
+                        <div id="overall-progress-bar" class="bg-gradient-to-r from-amber-400 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <span id="overall-percentage" class="text-emerald-400 font-bold">0%</span>
+                </div>
+                <div class="flex items-center justify-between sm:justify-center text-slate-300">
+                    <span id="completed-count">0 Completed</span>
+                    <span class="mx-2">•</span>
+                    <span id="in-progress-count">0 In Progress</span>
+                </div>
+                <div class="flex items-center justify-between sm:justify-end text-slate-300">
+                    <span id="expired-count-badge" class="text-rose-400 font-semibold">0 Expired / Closed</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Disclaimer Banner -->
+    <div class="bg-amber-50 border-b border-amber-200/80 px-4 py-2.5 text-xs text-amber-900 no-print">
+        <div class="max-w-7xl mx-auto flex items-start sm:items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-amber-600 text-sm mt-0.5 sm:mt-0 shrink-0"></i>
+            <p class="leading-tight">
+                <strong>Disclaimer:</strong> All exam dates, application ETAs, and registration windows in Aurus are estimates compiled from official notifications and web searches. Always verify details on official exam portals.
+            </p>
+        </div>
+    </div>
+
+    <!-- Hidden Header for PDF Print -->
+    <div class="hidden print-header p-4 border-b border-slate-300">
+        <h1 class="text-xl font-bold text-slate-900">Aurus Entrance Exam Schedule & Checklist</h1>
+        <p class="text-xs text-slate-600">Generated on: <span id="print-date"></span></p>
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
+
+        <!-- Control Bar -->
+        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4 no-print">
+            <div class="flex flex-col lg:flex-row gap-4 justify-between items-stretch lg:items-center">
+                <!-- Search Bar -->
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="search-input" placeholder="Search exam name, state (e.g. Maharashtra, Karnataka), or target degree..." 
+                        class="w-full pl-11 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-xs sm:text-sm transition-all">
+                    <button id="clear-search" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Expired Filter Toggle & Accordion Controls -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <label class="flex items-center gap-2 cursor-pointer bg-slate-100 hover:bg-slate-200/70 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 transition">
+                        <input type="checkbox" id="hide-expired-toggle" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500 border-slate-300">
+                        <span>Hide Expired Forms</span>
+                    </label>
+
+                    <button id="expand-all-btn" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
+                        <i class="fa-solid fa-angles-down"></i> Expand
+                    </button>
+                    <button id="collapse-all-btn" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
+                        <i class="fa-solid fa-angles-up"></i> Collapse
+                    </button>
+                    <button id="reset-data-btn" class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-semibold transition border border-rose-200/60">
+                        <i class="fa-solid fa-rotate"></i> Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Category Pills -->
+            <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mr-2">Category:</span>
+                <button class="filter-btn active bg-brand-600 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition shadow-sm" data-category="all">
+                    All (<span id="count-all">0</span>)
+                </button>
+                <button class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition" data-category="national-engg">
+                    <i class="fa-solid fa-flag text-blue-500 mr-1"></i> National Engg (<span id="count-national-engg">0</span>)
+                </button>
+                <button class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition" data-category="state-engg">
+                    <i class="fa-solid fa-map-location-dot text-emerald-500 mr-1"></i> State CETs (<span id="count-state-engg">0</span>)
+                </button>
+                <button class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition" data-category="private-varsity">
+                    <i class="fa-solid fa-building-columns text-purple-500 mr-1"></i> Private Varsities (<span id="count-private-varsity">0</span>)
+                </button>
+                <button class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition" data-category="mgmt-mca">
+                    <i class="fa-solid fa-briefcase text-amber-500 mr-1"></i> Management & MCA (<span id="count-mgmt-mca">0</span>)
+                </button>
+                <button class="filter-btn bg-slate-100 text-slate-600 hover:bg-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition" data-category="medical-general">
+                    <i class="fa-solid fa-user-doctor text-rose-500 mr-1"></i> Medical & General (<span id="count-medical-general">0</span>)
+                </button>
+            </div>
+        </div>
+
+        <!-- Month Timeline View -->
+        <div id="timeline-container" class="space-y-6"></div>
+
+        <!-- No Results Fallback -->
+        <div id="no-results" class="hidden bg-white rounded-2xl p-10 text-center border border-slate-200 shadow-sm">
+            <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400 text-xl">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-800">No exams match your filters</h3>
+            <p class="text-slate-500 text-xs mt-1">Try clearing search terms or adding a new custom exam entry.</p>
+        </div>
+
+    </main>
+
+    <!-- User Manual Modal -->
+    <div id="manual-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto border border-slate-200 p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-brand-600 text-lg"></i>
+                    <h2 class="text-lg font-bold text-slate-900">Aurus User Manual</h2>
+                </div>
+                <button id="close-manual-btn" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs leading-relaxed text-slate-600">
+                <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 text-amber-900 font-medium">
+                    <i class="fa-solid fa-mobile-screen mr-1 text-amber-600"></i>
+                    <strong>Mobile App Setup:</strong> Save this page to your smartphone home screen using Chrome (<em>Add to Home Screen</em>) or Safari (<em>Share → Add to Home Screen</em>) to run it like an app.
+                </div>
+
+                <ul class="space-y-2 list-disc pl-4">
+                    <li><strong>Status Updates:</strong> Change status per exam to track progress (Not Started, Form Filled, Fee Paid, Completed).</li>
+                    <li><strong>Adding Exams:</strong> Use the "Add Exam" button to append custom state or national entrance exams.</li>
+                    <li><strong>PDF Export:</strong> Click "Save PDF / Print" to create an offline printout or PDF document.</li>
+                </ul>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex justify-end">
+                <button id="got-it-manual-btn" class="px-5 py-2 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 text-xs shadow">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Exam Modal -->
+    <div id="exam-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-slate-200 p-6 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h2 class="text-lg font-bold text-slate-900">Add New Exam to Aurus</h2>
+                <button id="close-modal-btn" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="exam-form" class="space-y-3.5 text-xs">
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">Exam Name *</label>
+                    <input type="text" id="form-name" required placeholder="e.g. KEAM 2026 or SRMJEEE Phase 3" class="w-full border border-slate-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-brand-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="font-bold text-slate-700 block mb-1">Category *</label>
+                        <select id="form-category" required class="w-full border border-slate-300 rounded-xl px-3 py-2">
+                            <option value="national-engg">National Level Engg</option>
+                            <option value="state-engg">State Level CET</option>
+                            <option value="private-varsity">Private Varsity</option>
+                            <option value="mgmt-mca">Management & MCA</option>
+                            <option value="medical-general">Medical & General</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="font-bold text-slate-700 block mb-1">Application Month *</label>
+                        <select id="form-month" required class="w-full border border-slate-300 rounded-xl px-3 py-2">
+                            <option value="October / November">October / November</option>
+                            <option value="December">December</option>
+                            <option value="January">January</option>
+                            <option value="February">February</option>
+                            <option value="March">March</option>
+                            <option value="April / May">April / May</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">Scope / Target Colleges *</label>
+                    <input type="text" id="form-scope" required placeholder="e.g. Karnataka Engineering & Pharmacy Seats" class="w-full border border-slate-300 rounded-xl px-3 py-2">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="font-bold text-slate-700 block mb-1">Form Opens (ETA)</label>
+                        <input type="text" id="form-open-eta" placeholder="e.g. Early January" class="w-full border border-slate-300 rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="font-bold text-slate-700 block mb-1">Form Closes Date</label>
+                        <input type="text" id="form-close-eta" placeholder="e.g. Late March" class="w-full border border-slate-300 rounded-xl px-3 py-2">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="font-bold text-slate-700 block mb-1">Exam Date (ETA)</label>
+                        <input type="text" id="form-exam-eta" placeholder="e.g. Late April" class="w-full border border-slate-300 rounded-xl px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="font-bold text-slate-700 block mb-1">Official Portal URL</label>
+                        <input type="url" id="form-url" placeholder="https://..." class="w-full border border-slate-300 rounded-xl px-3 py-2">
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 flex justify-end gap-2">
+                    <button type="button" id="cancel-modal-btn" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl font-semibold hover:bg-slate-50">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 shadow">Save Exam</button>
+                </div>
+            </form>
+        </div>
+    </footer>
+
+    <script>
+        const defaultExams = [
+            { id: 'viteee', name: 'VITEEE', category: 'private-varsity', categoryLabel: 'Private Varsity', scope: 'VIT Campuses (Vellore, Chennai, AP, Bhopal)', openEta: 'Late October', closeEta: 'Late March', examEta: 'Mid to Late April', monthGroup: 'October / November', officialUrl: 'https://viteee.vit.ac.in/', tagColor: 'bg-purple-100 text-purple-800 border-purple-200' },
+            { id: 'jee-main-s1', name: 'JEE Main (Session 1)', category: 'national-engg', categoryLabel: 'National Level', scope: 'All India (NITs, IIITs, CFTIs, State Seats)', openEta: 'Late October', closeEta: 'Late November', examEta: 'Late January', monthGroup: 'October / November', officialUrl: 'https://jeemain.nta.nic.in/', tagColor: 'bg-blue-100 text-blue-800 border-blue-200' },
+            { id: 'srmjeee', name: 'SRMJEEE', category: 'private-varsity', categoryLabel: 'Private Varsity', scope: 'SRM IST Campuses (Kattankulathur, Ramapuram)', openEta: 'Early November', closeEta: 'Mid April (Phase 1)', examEta: 'April (Phase 1) & June (Phase 2)', monthGroup: 'October / November', officialUrl: 'https://www.srmist.edu.in/', tagColor: 'bg-purple-100 text-purple-800 border-purple-200' },
+            { id: 'met-manipal', name: 'MET (Manipal)', category: 'private-varsity', categoryLabel: 'Private Varsity', scope: 'MAHE Manipal, Jaipur, Bengaluru Campuses', openEta: 'Late October', closeEta: 'Mid March', examEta: 'Phase 1: April / Phase 2: May', monthGroup: 'October / November', officialUrl: 'https://manipal.edu/', tagColor: 'bg-purple-100 text-purple-800 border-purple-200' },
+            { id: 'kiitee', name: 'KIITEE', category: 'private-varsity', categoryLabel: 'Private Varsity', scope: 'KIIT University, Bhubaneswar', openEta: 'November', closeEta: 'March / April', examEta: 'Phase 1: April / Phase 2: May', monthGroup: 'October / November', officialUrl: 'https://kiitee.kiit.ac.in/', tagColor: 'bg-purple-100 text-purple-800 border-purple-200' },
+            { id: 'wbjee', name: 'WBJEE', category: 'state-engg', categoryLabel: 'State CET', scope: 'West Bengal (Jadavpur University, Govt & Pvt Colleges)', openEta: 'Late December', closeEta: 'Late January', examEta: 'Late April', monthGroup: 'December', officialUrl: 'https://wbjeeb.nic.in/', tagColor: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+            { id: 'mht-cet', name: 'MHT CET', category: 'state-engg', categoryLabel: 'State CET', scope: 'Maharashtra (COEP, VJTI, ICT, State Seats)', openEta: 'Mid January', closeEta: 'Late February', examEta: 'April – May', monthGroup: 'January', officialUrl: 'https://cetcell.mahacet.org/', tagColor: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+            { id: 'kcet', name: 'KCET', category: 'state-engg', categoryLabel: 'State CET', scope: 'Karnataka (Govt & Private State Seats)', openEta: 'Early January', closeEta: 'Late February', examEta: 'Mid April', monthGroup: 'January', officialUrl: 'https://cetonline.karnataka.gov.in/kea/', tagColor: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+            { id: 'bitsat', name: 'BITSAT', category: 'private-varsity', categoryLabel: 'Private Varsity', scope: 'BITS Pilani, Goa, and Hyderabad Campuses', openEta: 'Mid January', closeEta: 'Mid April', examEta: 'Session 1: May / Session 2: June', monthGroup: 'January', officialUrl: 'https://www.bitsadmission.com/', tagColor: 'bg-purple-100 text-purple-800 border-purple-200' },
+            { id: 'gujcet', name: 'GUJCET', category: 'state-engg', categoryLabel: 'State CET', scope: 'Gujarat (Engineering & Pharmacy State Colleges)', openEta: 'Early January', closeEta: 'Early February', examEta: 'Late March / Early April', monthGroup: 'January', officialUrl: 'https://gujcet.gseb.org/', tagColor: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+            { id: 'mah-mba-cet', name: 'MAH MBA / MMS CET', category: 'mgmt-mca', categoryLabel: 'State Management', scope: 'Maharashtra (JBIMS, SIMSREE, PUMBA, etc.)', openEta: 'Early January', closeEta: 'Mid February', examEta: 'Mid March', monthGroup: 'January', officialUrl: 'https://cetcell.mahacet.org/', tagColor: 'bg-amber-100 text-amber-800 border-amber-200' },
+            { id: 'mah-mca-cet', name: 'MAH MCA CET', category: 'mgmt-mca', categoryLabel: 'State Computer App', scope: 'Maharashtra MCA Colleges', openEta: 'Early January', closeEta: 'Mid February', examEta: 'Mid March', monthGroup: 'January', officialUrl: 'https://cetcell.mahacet.org/', tagColor: 'bg-amber-100 text-amber-800 border-amber-200' },
+            { id: 'tancet', name: 'TANCET', category: 'mgmt-mca', categoryLabel: 'State Management/MCA', scope: 'Tamil Nadu (Anna University, State Colleges MBA/MCA)', openEta: 'Early January', closeEta: 'Mid February', examEta: 'Mid March', monthGroup: 'January', officialUrl: 'https://tancet.annauniv.edu/', tagColor: 'bg-amber-100 text-amber-800 border-amber-200' },
+            { id: 'neet-ug', name: 'NEET UG', category: 'medical-general', categoryLabel: 'National Medical', scope: 'All India Medical Colleges (MBBS / BDS / AYUSH)', openEta: 'Late January / Feb', closeEta: 'Mid to Late March', examEta: 'First Sunday of May', monthGroup: 'January', officialUrl: 'https://neet.nta.nic.in/', tagColor: 'bg-rose-100 text-rose-800 border-rose-200' },
+            { id: 'jee-main-s2', name: 'JEE Main (Session 2)', category: 'national-engg', categoryLabel: 'National Level', scope: 'All India (NITs, IIITs, CFTIs, State Seats)', openEta: 'Early February', closeEta: 'Early March', examEta: 'Early April', monthGroup: 'February', officialUrl: 'https://jeemain.nta.nic.in/', tagColor: 'bg-blue-100 text-blue-800 border-blue-200' },
+            { id: 'comedk-uget', name: 'COMEDK UGET', category: 'state-engg', categoryLabel: 'State Private Engg', scope: 'Karnataka Top Private Colleges (Open All India)', openEta: 'Early February', closeEta: 'Early April', examEta: 'Mid May', monthGroup: 'February', officialUrl: 'https://www.comedk.org/', tagColor: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+            { id: 'cuet-ug', name: 'CUET UG', category: 'medical-general', categoryLabel: 'National Varsity', scope: 'Central Universities (DU, BHU, JNU, State Universities)', openEta: 'Late February', closeEta: 'Late March', examEta: 'Mid to Late May', monthGroup: 'February', officialUrl: 'https://cuetug.nta.nic.in/', tagColor: 'bg-blue-100 text-blue-800 border-blue-200' },
+            { id: 'ts-eapcet', name: 'TS EAPCET', category: 'state-engg', categoryLabel: 'State CET', scope: 'Telangana (Engineering, Agriculture & Pharmacy)', openEta: 'Early March', closeEta: 'Mid April', examEta: 'May', monthGroup: 'March', officialUrl: 'https://eapcet.tsche.ac.in/', tagColor: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+            { id: 'ap-eapcet', name: 'AP EAPCET', category: 'state-engg', categoryLabel: 'State CET', scope: 'Andhra Pradesh (Engineering, Agriculture & Pharmacy)', openEta: 'Early March', closeEta: 'Mid April', examEta: 'Mid May', monthGroup: 'March', officialUrl: 'https://cets.apsche.ap.gov.in/', tagColor: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+            { id: 'keam', name: 'KEAM', category: 'state-engg', categoryLabel: 'State CET', scope: 'Kerala Engineering, Architecture & Pharmacy', openEta: 'Mid March', closeEta: 'Mid April', examEta: 'Late May – June', monthGroup: 'March', officialUrl: 'https://cee.kerala.gov.in/', tagColor: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+            { id: 'jee-advanced', name: 'JEE Advanced', category: 'national-engg', categoryLabel: 'National Premier', scope: 'IITs (Qualified in JEE Main)', openEta: 'Late April', closeEta: 'Early May', examEta: 'Mid to Late May', monthGroup: 'April / May', officialUrl: 'https://jeeadv.ac.in/', tagColor: 'bg-blue-100 text-blue-800 border-blue-200' }
+        ];
+
+        const monthGroups = ['October / November', 'December', 'January', 'February', 'March', 'April / May'];
+        let currentExams = [];
+        let userExamState = {};
+        let activeCategory = 'all';
+        let searchQuery = '';
+        let hideExpired = false;
+        let monthAccordionState = {};
+
+        const STORAGE_KEY_EXAMS = 'aurus_entrance_exams_list_v5';
+        const STORAGE_KEY_STATE = 'aurus_entrance_exams_user_state_v5';
+
+        function loadStoredData() {
+            try {
+                const storedExams = localStorage.getItem(STORAGE_KEY_EXAMS);
+                currentExams = storedExams ? JSON.parse(storedExams) : [...defaultExams];
+
+                const storedState = localStorage.getItem(STORAGE_KEY_STATE);
+                userExamState = storedState ? JSON.parse(storedState) : {};
+            } catch (e) {
+                currentExams = [...defaultExams];
+                userExamState = {};
+            }
+
+            monthGroups.forEach(m => {
+                if (monthAccordionState[m] === undefined) monthAccordionState[m] = true;
+            });
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem(STORAGE_KEY_EXAMS, JSON.stringify(currentExams));
+                localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(userExamState));
+            } catch (e) {}
+            updateProgressDashboard();
+        }
+
+        function getExamStatus(examId) {
+            return userExamState[examId]?.status || 'not_started';
+        }
+
+        function getExamNotes(examId) {
+            return userExamState[examId]?.notes || '';
+        }
+
+        function isExamExpired(examId) {
+            return userExamState[examId]?.isExpired || false;
+        }
+
+        function updateProgressDashboard() {
+            const total = currentExams.length;
+            let completed = 0;
+            let inProgress = 0;
+            let expiredCount = 0;
+
+            currentExams.forEach(exam => {
+                const st = getExamStatus(exam.id);
+                const expired = isExamExpired(exam.id);
+
+                if (expired) expiredCount++;
+                if (st === 'completed') completed++;
+                else if (st === 'applied' || st === 'fee_paid') inProgress++;
+            });
+
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            document.getElementById('overall-percentage').textContent = `${percent}%`;
+            document.getElementById('overall-progress-bar').style.width = `${percent}%`;
+            document.getElementById('completed-count').textContent = `${completed} Completed`;
+            document.getElementById('in-progress-count').textContent = `${inProgress} In Progress`;
+            document.getElementById('expired-count-badge').textContent = `${expiredCount} Expired / Closed`;
+
+            document.getElementById('count-all').textContent = total;
+            document.getElementById('count-national-engg').textContent = currentExams.filter(e => e.category === 'national-engg').length;
+            document.getElementById('count-state-engg').textContent = currentExams.filter(e => e.category === 'state-engg').length;
+            document.getElementById('count-private-varsity').textContent = currentExams.filter(e => e.category === 'private-varsity').length;
+            document.getElementById('count-mgmt-mca').textContent = currentExams.filter(e => e.category === 'mgmt-mca').length;
+            document.getElementById('count-medical-general').textContent = currentExams.filter(e => e.category === 'medical-general').length;
+        }
+
+        function matchesFilter(exam) {
+            if (hideExpired && isExamExpired(exam.id)) return false;
+            if (activeCategory !== 'all' && exam.category !== activeCategory) return false;
+
+            if (searchQuery.trim() !== '') {
+                const q = searchQuery.toLowerCase().trim();
+                const nameMatch = exam.name.toLowerCase().includes(q);
+                const scopeMatch = exam.scope.toLowerCase().includes(q);
+                return nameMatch || scopeMatch;
+            }
+            return true;
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('timeline-container');
+            container.innerHTML = '';
+            let totalVisibleExams = 0;
+
+            monthGroups.forEach(month => {
+                const examsInMonth = currentExams.filter(e => e.monthGroup === month && matchesFilter(e));
+                if (examsInMonth.length === 0) return;
+
+                totalVisibleExams += examsInMonth.length;
+                const isOpen = monthAccordionState[month] !== false;
+
+                const monthCard = document.createElement('div');
+                monthCard.className = 'bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden';
+
+                monthCard.innerHTML = `
+                    <div class="month-header bg-slate-100 p-4 flex items-center justify-between cursor-pointer border-b border-slate-200" data-month="${month}">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-regular fa-calendar-days text-brand-600 font-bold"></i>
+                            <h2 class="text-base sm:text-lg font-bold text-slate-900">${month} Applications (${examsInMonth.length})</h2>
+                        </div>
+                        <i class="fa-solid fa-chevron-down transition-transform ${isOpen ? 'rotate-180' : ''}"></i>
+                    </div>
+
+                    <div class="month-body ${isOpen ? 'block' : 'hidden'} divide-y divide-slate-100">
+                        ${examsInMonth.map(exam => renderExamRowHTML(exam)).join('')}
+                    </div>
+                `;
+
+                container.appendChild(monthCard);
+            });
+
+            document.getElementById('no-results').classList.toggle('hidden', totalVisibleExams > 0);
+            attachEvents();
+        }
+
+        function renderExamRowHTML(exam) {
+            const status = getExamStatus(exam.id);
+            const notes = getExamNotes(exam.id);
+            const expired = isExamExpired(exam.id);
+
+            return `
+                <div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${expired ? 'opacity-50 bg-slate-50' : ''}">
+                    <div class="flex-1 space-y-1">
+                        <div class="flex items-center gap-2">
+                            <a href="${exam.officialUrl}" target="_blank" class="font-bold text-slate-900 hover:text-brand-600 text-sm">
+                                ${exam.name} <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400"></i>
+                            </a>
+                            <span class="text-[10px] border px-2 py-0.5 rounded ${exam.tagColor}">${exam.categoryLabel}</span>
+                        </div>
+                        <p class="text-xs text-slate-600">${exam.scope}</p>
+                        <div class="text-[11px] text-slate-500 gap-3 flex flex-wrap">
+                            <span><strong>Opens:</strong> ${exam.openEta}</span>
+                            <span><strong>Closes:</strong> ${exam.closeEta}</span>
+                            <span><strong>Exam:</strong> ${exam.examEta}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 no-print">
+                        <select data-exam-id="${exam.id}" class="status-select bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-semibold">
+                            <option value="not_started" ${status === 'not_started' ? 'selected' : ''}>⚪ Not Started</option>
+                            <option value="applied" ${status === 'applied' ? 'selected' : ''}>🔵 Form Filled</option>
+                            <option value="fee_paid" ${status === 'fee_paid' ? 'selected' : ''}>🟡 Fee Paid</option>
+                            <option value="completed" ${status === 'completed' ? 'selected' : ''}>🟢 Completed</option>
+                        </select>
+                        <input type="text" data-exam-id="${exam.id}" value="${notes}" placeholder="Notes..." class="notes-input bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-xs w-28 sm:w-36">
+                        <button data-exam-id="${exam.id}" class="toggle-expired-btn p-2 text-slate-400 hover:text-amber-600" title="Flag Closed">
+                            <i class="fa-solid ${expired ? 'fa-arrow-rotate-left' : 'fa-calendar-minus'}"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function attachEvents() {
+            document.querySelectorAll('.month-header').forEach(h => {
+                h.onclick = () => {
+                    const month = h.getAttribute('data-month');
+                    monthAccordionState[month] = !monthAccordionState[month];
+                    renderTimeline();
+                };
+            });
+
+            document.querySelectorAll('.status-select').forEach(s => {
+                s.onchange = (e) => {
+                    const id = e.target.getAttribute('data-exam-id');
+                    if (!userExamState[id]) userExamState[id] = {};
+                    userExamState[id].status = e.target.value;
+                    saveData();
+                };
+            });
+
+            document.querySelectorAll('.notes-input').forEach(i => {
+                i.oninput = (e) => {
+                    const id = e.target.getAttribute('data-exam-id');
+                    if (!userExamState[id]) userExamState[id] = {};
+                    userExamState[id].notes = e.target.value;
+                    saveData();
+                };
+            });
+
+            document.querySelectorAll('.toggle-expired-btn').forEach(b => {
+                b.onclick = () => {
+                    const id = b.getAttribute('data-exam-id');
+                    if (!userExamState[id]) userExamState[id] = {};
+                    userExamState[id].isExpired = !userExamState[id].isExpired;
+                    saveData();
+                    renderTimeline();
+                };
+            });
+        }
+
+        window.onload = () => {
+            loadStoredData();
+            updateProgressDashboard();
+            renderTimeline();
+
+            document.getElementById('search-input').oninput = (e) => {
+                searchQuery = e.target.value;
+                renderTimeline();
+            };
+
+            document.getElementById('hide-expired-toggle').onchange = (e) => {
+                hideExpired = e.target.checked;
+                renderTimeline();
+            };
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('bg-brand-600', 'text-white'));
+                    btn.classList.add('bg-brand-600', 'text-white');
+                    activeCategory = btn.getAttribute('data-category');
+                    renderTimeline();
+                };
+            });
+
+            document.getElementById('export-pdf-btn').onclick = () => window.print();
+            document.getElementById('open-manual-btn').onclick = () => document.getElementById('manual-modal').classList.remove('hidden');
+            document.getElementById('close-manual-btn').onclick = () => document.getElementById('manual-modal').classList.add('hidden');
+            document.getElementById('got-it-manual-btn').onclick = () => document.getElementById('manual-modal').classList.add('hidden');
+            document.getElementById('open-add-modal-btn').onclick = () => document.getElementById('exam-modal').classList.remove('hidden');
+            document.getElementById('close-modal-btn').onclick = () => document.getElementById('exam-modal').classList.add('hidden');
+            document.getElementById('cancel-modal-btn').onclick = () => document.getElementById('exam-modal').classList.add('hidden');
+        };
+    </script>
+</body>
+</html>
